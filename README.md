@@ -2,7 +2,12 @@
 
 A production-grade, configurable workflow decision engine built with Node.js (Express) and React.
 
-<img width="1812" height="830" alt="image" src="https://github.com/user-attachments/assets/00aec432-38c5-4ea9-8f27-50b6bc010c1c" />
+<img width="1829" height="841" alt="image" src="https://github.com/user-attachments/assets/bc87991c-87c2-45ea-84bc-3e9546bd03ff" />
+<img width="1813" height="829" alt="image" src="https://github.com/user-attachments/assets/85f8e4a4-3827-4f37-a0cc-4bd7bf5a427a" />
+<img width="1824" height="829" alt="image" src="https://github.com/user-attachments/assets/036b3f9e-135c-4d62-b28d-864a13fd334e" />
+
+
+
 
 
 ## Quick Start
