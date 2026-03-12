@@ -47,29 +47,29 @@ npm test
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     React Frontend                       │
+│                     React Frontend                      │
 │   Dashboard | Submit Form | Stage Trace | Audit Log     │
 └─────────────────────┬───────────────────────────────────┘
                       │ REST API
 ┌─────────────────────▼───────────────────────────────────┐
-│                  Express API Layer                        │
-│    POST /api/workflows/:id/submit                        │
+│                  Express API Layer                      │
+│    POST /api/workflows/:id/submit                       │
 │    GET  /api/requests/:id/audit                         │
 └─────────────────────┬───────────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────────┐
-│                Workflow Service                          │
+│                Workflow Service                         │
 │   Idempotency → Validation → Execution → Audit          │
 └───────┬──────────────────────────────────────┬──────────┘
         │                                      │
 ┌───────▼──────────┐              ┌────────────▼──────────┐
-│  Rules Engine    │              │  External Dep Sim      │
-│  Stage-by-stage  │              │  Retries + Audit       │
-│  condition eval  │              │  credit_bureau etc.    │
+│  Rules Engine    │              │  External Dep Sim     │
+│  Stage-by-stage  │              │  Retries + Audit      │
+│  condition eval  │              │  credit_bureau etc.   │
 └──────────────────┘              └───────────────────────┘
         │
 ┌───────▼──────────────────────────────────────────────────┐
-│              Workflow Registry                            │
+│              Workflow Registry                           │
 │   loan_application.json | vendor_approval.json | ...     │
 │   Hot-reloadable — no restart needed                     │
 └──────────────────────────────────────────────────────────┘
