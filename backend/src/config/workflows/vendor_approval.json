@@ -1,0 +1,104 @@
+{
+  "id": "vendor_approval",
+  "name": "Vendor Approval Workflow",
+  "description": "Vendor onboarding with compliance, financial, and operational checks",
+  "version": "1.0.0",
+  "inputSchema": {
+    "required": ["vendorName", "vendorId", "category", "annualContractValue", "country", "yearsInBusiness"],
+    "properties": {
+      "vendorName": { "type": "string" },
+      "vendorId": { "type": "string" },
+      "category": { "type": "string", "enum": ["technology", "services", "manufacturing", "logistics", "consulting"] },
+      "annualContractValue": { "type": "number", "min": 0 },
+      "country": { "type": "string" },
+      "yearsInBusiness": { "type": "number", "min": 0 },
+      "hasInsurance": { "type": "boolean", "default": false },
+      "complianceCertified": { "type": "boolean", "default": false },
+      "referencesProvided": { "type": "number", "min": 0, "default": 0 }
+    }
+  },
+  "stages": [
+    {
+      "id": "eligibility_check",
+      "name": "Basic Eligibility",
+      "type": "validation",
+      "rules": [
+        {
+          "id": "rule_min_years",
+          "name": "Minimum Years in Business",
+          "condition": "yearsInBusiness < 2",
+          "action": "reject",
+          "message": "Vendor must have at least 2 years of business history",
+          "weight": 100
+        },
+        {
+          "id": "rule_insurance",
+          "name": "Insurance Requirement",
+          "condition": "hasInsurance === false",
+          "action": "reject",
+          "message": "Vendor must carry valid business insurance",
+          "weight": 90
+        }
+      ]
+    },
+    {
+      "id": "compliance_check",
+      "name": "Compliance Verification",
+      "type": "validation",
+      "externalDependency": "compliance_registry",
+      "rules": [
+        {
+          "id": "rule_high_value_compliance",
+          "name": "Compliance Certification for High-Value Contracts",
+          "condition": "annualContractValue >= 50000 && complianceCertified === false",
+          "action": "reject",
+          "message": "Contracts over $50,000 require compliance certification",
+          "weight": 95
+        }
+      ]
+    },
+    {
+      "id": "risk_assessment",
+      "name": "Risk Assessment",
+      "type": "scoring",
+      "rules": [
+        {
+          "id": "rule_high_value_references",
+          "name": "References for High-Value Contracts",
+          "condition": "annualContractValue >= 100000 && referencesProvided < 3",
+          "action": "manual_review",
+          "message": "Contracts over $100,000 require at least 3 references",
+          "weight": 70
+        },
+        {
+          "id": "rule_strategic_review",
+          "name": "Strategic Vendor Review",
+          "condition": "annualContractValue > 500000",
+          "action": "manual_review",
+          "message": "Contracts over $500,000 require executive review",
+          "weight": 80
+        }
+      ]
+    },
+    {
+      "id": "final_decision",
+      "name": "Final Decision",
+      "type": "decision",
+      "rules": [
+        {
+          "id": "rule_auto_approve",
+          "name": "Auto Approval for Low-Risk Vendors",
+          "condition": "annualContractValue <= 25000 && yearsInBusiness >= 5 && complianceCertified === true",
+          "action": "approve",
+          "message": "Low-value, experienced, certified vendor — auto approved",
+          "weight": 0
+        }
+      ]
+    }
+  ],
+  "retryConfig": {
+    "maxRetries": 2,
+    "retryDelayMs": 100,
+    "retryableStages": ["compliance_check"]
+  }
+}

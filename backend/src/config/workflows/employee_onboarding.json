@@ -1,0 +1,104 @@
+{
+  "id": "employee_onboarding",
+  "name": "Employee Onboarding Workflow",
+  "description": "Pre-employment screening and onboarding eligibility checks",
+  "version": "1.0.0",
+  "inputSchema": {
+    "required": ["candidateName", "candidateId", "role", "department", "offeredSalary", "startDate"],
+    "properties": {
+      "candidateName": { "type": "string" },
+      "candidateId": { "type": "string" },
+      "role": { "type": "string" },
+      "department": { "type": "string" },
+      "offeredSalary": { "type": "number", "min": 0 },
+      "startDate": { "type": "string" },
+      "backgroundCheckPassed": { "type": "boolean", "default": false },
+      "documentsSubmitted": { "type": "boolean", "default": false },
+      "requiresSecurityClearance": { "type": "boolean", "default": false },
+      "budgetApproved": { "type": "boolean", "default": false }
+    }
+  },
+  "stages": [
+    {
+      "id": "document_check",
+      "name": "Document Verification",
+      "type": "validation",
+      "rules": [
+        {
+          "id": "rule_docs_submitted",
+          "name": "Required Documents Submitted",
+          "condition": "documentsSubmitted === false",
+          "action": "reject",
+          "message": "Candidate has not submitted all required documents",
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "id": "background_check",
+      "name": "Background Verification",
+      "type": "validation",
+      "externalDependency": "background_check_service",
+      "rules": [
+        {
+          "id": "rule_background",
+          "name": "Background Check Result",
+          "condition": "backgroundCheckPassed === false",
+          "action": "reject",
+          "message": "Background check has not passed",
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "id": "budget_check",
+      "name": "Budget Approval",
+      "type": "validation",
+      "rules": [
+        {
+          "id": "rule_budget",
+          "name": "Headcount Budget Approved",
+          "condition": "budgetApproved === false",
+          "action": "manual_review",
+          "message": "Position budget not yet approved — requires HR manager review",
+          "weight": 85
+        }
+      ]
+    },
+    {
+      "id": "security_clearance",
+      "name": "Security Clearance Check",
+      "type": "conditional",
+      "rules": [
+        {
+          "id": "rule_security_clearance",
+          "name": "Security Clearance for Sensitive Roles",
+          "condition": "requiresSecurityClearance === true",
+          "action": "manual_review",
+          "message": "Role requires security clearance — pending verification",
+          "weight": 90
+        }
+      ]
+    },
+    {
+      "id": "final_decision",
+      "name": "Onboarding Approval",
+      "type": "decision",
+      "rules": [
+        {
+          "id": "rule_auto_approve",
+          "name": "Standard Role Auto Approval",
+          "condition": "backgroundCheckPassed === true && documentsSubmitted === true && budgetApproved === true && requiresSecurityClearance === false",
+          "action": "approve",
+          "message": "All checks passed — candidate cleared for onboarding",
+          "weight": 0
+        }
+      ]
+    }
+  ],
+  "retryConfig": {
+    "maxRetries": 3,
+    "retryDelayMs": 100,
+    "retryableStages": ["background_check"]
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "id": "loan_application",
+  "name": "Loan Application Workflow",
+  "description": "End-to-end loan approval with credit checks, income verification, and risk scoring",
+  "version": "1.0.0",
+  "inputSchema": {
+    "required": ["applicantName", "applicantId", "loanAmount", "annualIncome", "creditScore", "employmentStatus", "loanPurpose"],
+    "properties": {
+      "applicantName": { "type": "string" },
+      "applicantId": { "type": "string" },
+      "loanAmount": { "type": "number", "min": 1000, "max": 1000000 },
+      "annualIncome": { "type": "number", "min": 0 },
+      "creditScore": { "type": "number", "min": 300, "max": 850 },
+      "employmentStatus": { "type": "string", "enum": ["employed", "self_employed", "unemployed", "retired"] },
+      "loanPurpose": { "type": "string" },
+      "existingDebt": { "type": "number", "min": 0, "default": 0 },
+      "collateralValue": { "type": "number", "min": 0, "default": 0 }
+    }
+  },
+  "stages": [
+    {
+      "id": "input_validation",
+      "name": "Input Validation",
+      "type": "validation",
+      "rules": [
+        {
+          "id": "rule_employment_check",
+          "name": "Employment Status Check",
+          "condition": "employmentStatus === 'unemployed'",
+          "action": "reject",
+          "message": "Unemployed applicants are not eligible",
+          "weight": 100
+        },
+        {
+          "id": "rule_min_income",
+          "name": "Minimum Income Requirement",
+          "condition": "annualIncome < 20000",
+          "action": "reject",
+          "message": "Annual income must be at least $20,000",
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "id": "credit_check",
+      "name": "Credit Score Evaluation",
+      "type": "scoring",
+      "externalDependency": "credit_bureau",
+      "rules": [
+        {
+          "id": "rule_credit_hard_reject",
+          "name": "Hard Credit Reject",
+          "condition": "creditScore < 500",
+          "action": "reject",
+          "message": "Credit score below minimum threshold of 500",
+          "weight": 100
+        },
+        {
+          "id": "rule_credit_review",
+          "name": "Manual Review Threshold",
+          "condition": "creditScore >= 500 && creditScore < 620",
+          "action": "manual_review",
+          "message": "Credit score in manual review range (500-619)",
+          "weight": 50
+        }
+      ]
+    },
+    {
+      "id": "debt_to_income",
+      "name": "Debt-to-Income Ratio Check",
+      "type": "threshold",
+      "rules": [
+        {
+          "id": "rule_dti_calculation",
+          "name": "DTI Ratio Calculation",
+          "condition": "((existingDebt + (loanAmount * 0.05)) / annualIncome) > 0.43",
+          "action": "reject",
+          "message": "Debt-to-income ratio exceeds 43% threshold",
+          "weight": 80
+        }
+      ]
+    },
+    {
+      "id": "risk_scoring",
+      "name": "Composite Risk Scoring",
+      "type": "scoring",
+      "rules": [
+        {
+          "id": "rule_high_loan_ratio",
+          "name": "Loan-to-Income Ratio",
+          "condition": "(loanAmount / annualIncome) > 5",
+          "action": "manual_review",
+          "message": "Loan amount exceeds 5x annual income — requires manual review",
+          "weight": 60
+        },
+        {
+          "id": "rule_large_loan_collateral",
+          "name": "Large Loan Collateral Check",
+          "condition": "loanAmount > 100000 && collateralValue < loanAmount * 0.5",
+          "action": "manual_review",
+          "message": "Large loans require collateral of at least 50% of loan value",
+          "weight": 70
+        }
+      ]
+    },
+    {
+      "id": "final_decision",
+      "name": "Final Approval Decision",
+      "type": "decision",
+      "rules": [
+        {
+          "id": "rule_auto_approve",
+          "name": "Auto Approval",
+          "condition": "creditScore >= 700 && (loanAmount / annualIncome) <= 3",
+          "action": "approve",
+          "message": "Meets auto-approval criteria: strong credit and conservative loan ratio",
+          "weight": 0
+        }
+      ]
+    }
+  ],
+  "retryConfig": {
+    "maxRetries": 3,
+    "retryDelayMs": 100,
+    "retryableStages": ["credit_check"]
+  }
+}
